@@ -42,7 +42,7 @@ class AppServiceProvider extends ServiceProvider
 
 	    $admincount = User::where('isadmin', 1)->count() + 1 ;
 	    $usercount = User::where('isadmin', 0)->count();
-	    $viewposts = Post::orderBy('view', 'DESC')->paginate(4);
+	    $viewposts = Post::where('flag', 1)->orderBy('view', 'DESC')->paginate(4);
 	    $dateposts = Post::where('flag', 1)->orderBy('created_at', 'DESC')->paginate(4);
 	    $tagposts = Tag::orderBy('created_at', 'DESC')->paginate(15);
 

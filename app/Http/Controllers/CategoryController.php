@@ -8,6 +8,7 @@ use App\PostTag;
 use App\Tag;
 use Illuminate\Http\Request;
 use App\Http\Requests\CategoryRequest;
+use Illuminate\Support\Facades\View;
 
 class CategoryController extends Controller
 {
@@ -118,5 +119,15 @@ class CategoryController extends Controller
 	    else{
 		    return response()->json(['error' => true]);
 	      }
+    }
+
+    public function search(Request $request){
+		$search = $request->search;
+		$categorys = Category::search($search)->get();
+	    $view = View::make('admin.searchcategory')->with('categorys', $categorys);
+	    $html = $view->render();
+	    return response()->json([
+		    'html' => $html
+	    ]);
     }
 }

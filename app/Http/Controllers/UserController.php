@@ -9,6 +9,7 @@ use App\Tag;
 use App\User;
 use Illuminate\Http\Request;
 use App\Http\Requests\CategoryRequest;
+use Illuminate\Support\Facades\View;
 
 class UserController extends Controller
 {
@@ -127,6 +128,47 @@ class UserController extends Controller
 		return view('admin.normaluser',[
 			'users' => $users,
 		]);
+	}
+
+	public function search(Request $request){
+		$search = $request->search;
+		$users = User::search($search)->get();
+		$view = View::make('admin.searchuser')->with('users', $users);
+		$html = $view->render();
+		return response()->json([
+			'html' => $html
+		]);
+	}
+
+	public function adminsearch(Request $request){
+		$search = $request->search;
+		$users = User::search($search)->where('isadmin', 1)->orWhere('isadmin', 2)->get();
+		$view = View::make('admin.searchuser')->with('users', $users);
+		$html = $view->render();
+		return response()->json([
+			'html' => $html
+		]);
+	}
+
+	public function normalsearch(Request $request){
+		$search = $request->search;
+		$users = User::search($search)->where('isadmin', 0)->get();
+		$view = View::make('admin.searchuser')->with('users', $users);
+		$html = $view->render();
+		return response()->json([
+			'html' => $html
+		]);
+	}
+
+	public function change(Request $request, $id){
+		$isadmin = $request->isadmin ;
+		$arr = ['isadmin'=>$isadmin];
+		User::where('id', $id)->update($arr);
+		$user = User::find($id);
+		return $user;
+//		return response()->json([
+//			'user' => $user
+//		]);
 	}
 
 }

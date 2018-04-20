@@ -3,10 +3,12 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Laravel\Scout\Searchable;
+//use Nicolaslopezj\Searchable\SearchableTrait;
 class Post extends Model
 {
     //
+	use Searchable;
 	protected $table = 'posts';//optional
 	protected $fillable = ['title', 'description', 'content', 'thumnails', 'category_id', 'flag', 'slug', 'user_id'];
 	public function category() {

@@ -27,7 +27,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.7/js/fileinput.min.js"></script>
     <script src="/vendor/unisharp/laravel-ckeditor/ckeditor.js"></script>
     <script src="/vendor/unisharp/laravel-ckeditor/adapters/jquery.js"></script>
-
     <style>
         .pagination {
             display: inline-block;
@@ -100,6 +99,23 @@
             outline: none;
             border: 1px solid #bec2c9;
         }
+        .textareaedit {
+            font-family: -apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+            background: rgba(0, 0, 0, 0);
+            overflow: hidden;
+            resize: none;
+            padding: 13px 17px;
+            position: relative;
+            z-index: 100;
+            width: 471px;
+            font-weight: 500;
+            font-size: 15px;
+            margin-left: 60px;
+            display: block;
+            border-radius: 25px;
+            outline: none;
+            border: 1px solid #bec2c9;
+        }
 
     </style>
 </head>
@@ -111,12 +127,73 @@
 ** Preloader *********************************************************
 ****************************************************************** -->
 
-<div id="preloader-container">
-    <div id="preloader-wrap">
-        <div id="preloader"></div>
+{{--<div id="preloader-container">--}}
+    {{--<div id="preloader-wrap">--}}
+        {{--<div id="preloader"></div>--}}
+    {{--</div>--}}
+{{--</div>--}}
+
+
+<div class="modal fade bd-example-modal-lg" id="add-post" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">ADD POST</h4>
+            </div>
+            <div class="modal-body">
+                <form method="post" role="form" id="add-new" enctype="multipart/form-data">
+
+                    <div class="form-group" id="add-title">
+                        <label for="">Title</label>
+                        <input type="text" class="form-control" name="title" placeholder="title" id="title">
+                    </div>
+                    <div class="form-group" id="add-description">
+                        <label for="">Description</label>
+                        <input type="text" class="form-control" name="description"  placeholder="description" id="description">
+                    </div>
+                    <div class="form-group" id="add-content">
+                        <label for="">Content</label>
+                        <textarea  class="form-control" name="contents" placeholder="content" id="content"></textarea>
+                    </div>
+                    <div class="portlet light bordered">
+                        <div class="portlet-title">
+                            <div class="caption">
+                                <label for="">Category</label>
+                            </div>
+                        </div>
+                        <div class="portlet-body">
+                            <select class="form-control" name="category_id" id="category_id">
+                                @foreach ($categorys as $category)
+                                    <option value="{{$category->id}}" >{{$category->name}}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="add-thumnails">
+                        <label for="">Thumnails</label>
+                        <input type="file" class="form-control" name="thumnails" id="thumnails" onchange="readURL(this);">
+                        <img class="blah" src="#" style="display: none;" />
+
+                    </div>
+                    <div class="form-group" id="add-tags">
+                        <label for="">Tag</label><br>
+                        <select multiple name="tags[]" id="tags" data-role="tagsinput"  ></select>
+
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">ADD</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
     </div>
 </div>
-
 
 <!-- *****************************************************************
 ** Header ************************************************************
@@ -139,12 +216,11 @@
 
 
     <!-- MENU DESKTOP -->
-    <nav class="menu-desktop menu-sticky">
+    <nav class="menu-desktop no-menu-sticky">
 
         <ul class="tada-menu">
             <li><a href="{{asset('/')}}" >HOME</a>
             </li>
-            {{--@foreach($)--}}
             <li><a href="#">Category <i class="icon-arrow-down8"></i></a>
                 <ul class="submenu">
                     @foreach($categorys as $category)
@@ -167,8 +243,13 @@
                         </div>
                     </li>
                     <li>
-                        <div  >
-                            <a href="#">{{Auth::user()->username}}'s posts</a>
+                        <div>
+                            <a href="{{asset('user'). '/' . Auth::user()->id}}">{{Auth::user()->username}}'s posts</a>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <a data-toggle="modal" data-target="#add-post">Add new post</a>
                         </div>
                     </li>
                     @if(Auth::user()->isadmin === 1)
@@ -241,11 +322,14 @@
 
     <!-- SEARCH -->
     <div class="tada-search">
-        <form>
-            <div class="form-group-search">
-                <input type="search" class="search-field" placeholder="Search and hit enter...">
-                <button type="submit" class="search-btn"><i class="icon-search4"></i></button>
-            </div>
+        <form action="{{asset('result')}}" method="get">
+            @csrf
+                    <div class="form-group-search">
+                        <input type="search" name="search" class="search-field" placeholder="Search " style="width: 100%">
+                        <ul class="submenu" id="search_result" style="width: 100%">
+                        </ul>
+                    </div>
+                <span class="show_result" style="display: none"></span>
         </form>
     </div>
 
@@ -380,7 +464,119 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script src="{{asset('js/blog/slippry.js')}}"></script>
 <script src="{{asset('js/blog/main.js')}}"></script>
+<script type="text/javascript">
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            console.log(input.files[0]['name']);
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('.blah')
+                    .attr('src', e.target.result)
+                    .height(150)
+                    .width('auto')
+                    .css('display','block');
 
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    $.ajaxSetup(
+        {
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        }
+    );
+    $('#content').ckeditor();
+
+    $('#add-new').on('submit', function (e) {
+        if($('#thumnails')[0].files[0]){
+            var filename = $('#thumnails')[0].files[0]['name'];
+        }
+        e.preventDefault();
+        var formdata = new FormData($("#add-new")[0]);
+        $.ajax({
+            type:'post',
+            url:'{{asset("postimg")}}',
+            data:formdata,
+            cache:false,
+            dataType:'text',
+            // async:false,
+            processData: false,
+            contentType: false,
+            success:function(response){
+                console.log(response);
+            }
+        });
+
+        $.ajax({
+            type: 'post',
+            url: '{{asset("post")}}',
+            data: {
+                title: $('#title').val(),
+                description: $('#description').val(),
+                contents: $('#content').val(),
+                category_id: $('#category_id').val(),
+                thumnails: filename,
+                tags: $('#tags').val()
+            },
+            success: function (response) {
+                $('#add-post').modal('hide');
+
+                toastr.success('Add posts successfully');
+
+            },
+            error: function (xhr, status, errorThrown) {
+                var err = xhr.responseJSON.errors;
+                console.log(err);
+                $('#add-title').append('<p style="color: crimson">'+ err['title'][0] +'</p>');
+                $('#add-description').append('<p style="color: crimson">'+ err['description'][0] +'</p>');
+                $('#add-content').append('<p style="color: crimson">'+ err['contents'][0] +'</p>');
+                $('#add-thumnails').append('<p style="color: crimson">'+ err['thumnails'][0] +'</p>');
+                $('#add-tags').append('<p style="color: crimson">'+ err['tags'][0] +'</p>');
+
+            }
+        });
+    });
+    //end add post
+
+//    search
+    $('.tada-search').on('keyup','.search-field', function(e){
+            if (e.keyCode == 27) {
+                $('input.search-field').val("");
+                $('#search_result').css('display', 'none');
+                $('.show_result').css('display', 'none');
+            }
+            else {
+                var search = $('input.search-field').val().trim();
+                if(search === ""){
+
+                }
+                else {
+                    $.ajax({
+                        type: 'get',
+                        url: '{{asset("")}}search',
+                        data:{
+                            search: search
+                        },
+                        success: function (response) {
+                            if (response.html !== ''){
+                                $('#search_result').html(response.html);
+                                $('#search_result').css('display', 'block');
+                                $('.show_result').replaceWith('<button class="show_result btn-light" type="submit">See all results</button>');
+                            }
+                            else {
+                                $('#search_result').html(response.html);
+                                $('.show_result').replaceWith("<span class='show_result'>Don't have any content like this</span>");
+                            }
+
+                        }
+                    })
+                }
+            }
+    });
+
+</script>
 
 </body>
 </html>

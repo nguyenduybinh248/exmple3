@@ -68,6 +68,11 @@
 
         </div>
     </div>
+    {{--search form--}}
+
+    <div class="input-group pull-right search_field">
+        <input type="text" id="search_content" class="form-control fa-search search_content" placeholder="Search...">
+    </div>
 
     {{--table list--}}
     <div class="table-reponsive">
@@ -89,7 +94,7 @@
 
 
             @foreach($posts as $post)
-                <tr class="tr{{ $post->id }}  checkflag"  data-id="{{$post->id}}">
+                <tr class="tr{{ $post->id }}  "  data-id="{{$post->id}}">
                     <td class="stl-column"><img src="{{asset('')}}{{ $post->thumnails }}" width="50px" height="50px" /></td>
                     <td class="stl-column">{{ $post->title }}</td>
                     <td class="stl-column">{{$post->user->username}}</td>
@@ -97,7 +102,7 @@
                     <td class="stl-column">{{ $post->created_at->diffForHumans() }}</td>
                     <td class="stl-column">{{ $post->updated_at->diffForHumans() }}</td>
                     <td class="stl-column">
-                        <label class="radio-inline">
+                        <label class="radio-inline checkflag">
                             <input type="radio" name="check{{$post->id}}" value="1"
                                        @if($post->flag === 1)
                                        checked
@@ -268,7 +273,7 @@
 
 @endsection
 @section('link')
-    {{ $posts->links() }}
+    <span class="paginate">{{ $posts->links() }}</span>
 @endsection
 @section('script')
     <script type="text/javascript">
@@ -292,7 +297,6 @@
 
 
         });
-
 
         //show image when choose file
         function readURL(input) {
@@ -582,10 +586,36 @@
 @endsection
 @section('script2')
 <script type="text/javascript">
+    //search
+    $('.search_field').on('keyup','.search_content', function(e){
+        if (e.keyCode == 27) {
+            $('input.search_content').val("");
+        }
+        var search = $('input.search_content').val();
+        $.ajax({
+            type: 'post',
+            url: '{{asset("")}}admin/post/search',
+            data:{
+                search: search
+            },
+            success: function (response) {
+                if (response.html !== ''){
+                    $('tbody').html(response.html);
+                    $('.paginate').remove();
+                }
+                else {
+                    $('tbody').html("<h3>Don't have any content like this</h3>");
+                    $('.paginate').remove();
+                }
+
+            }
+        })
+
+    });
 
     // post and unpost
-    $('.checkflag').each(function () {
-        $(this).change(function () {
+
+    $(document).on('click', '.checkflag',  function () {
             var id = $(this).data('id');
             var flagcheck = $('input[name^=check'+id+']:checked').val();
             if(flagcheck == 1){
@@ -614,6 +644,7 @@
             }
 
         });
-    });
+
+
 </script>
 @endsection

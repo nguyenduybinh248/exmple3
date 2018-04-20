@@ -38,6 +38,13 @@
 
     </div>
 </div>
+
+{{--search form--}}
+
+<div class="input-group pull-right search_field" >
+    <input type="text" id="search_content" class="form-control fa-search search_content" placeholder="Search...">
+</div>
+
     {{--list category--}}
     <div class="table-reponsive">
         <table class="table table-hover">
@@ -248,6 +255,32 @@
 
             });
 //        end delete
+        });
+
+        $('.search_field').on('keyup','.search_content', function(e){
+            if (e.keyCode == 27) {
+                $('input.search_content').val("");
+            }
+                var search = $('input.search_content').val();
+                    $.ajax({
+                        type: 'post',
+                        url: '{{asset("")}}admin/category/search',
+                        data:{
+                            search: search
+                        },
+                        success: function (response) {
+                            if (response.html !== ''){
+                                $('tbody').html(response.html);
+
+                            }
+                            else {
+                                $('tbody').html("<h3>Don't have any content like this</h3>");
+
+                            }
+
+                        }
+                    })
+
         });
 
     </script>

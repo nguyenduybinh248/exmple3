@@ -4,6 +4,13 @@
 @endsection
 @section('content')
 
+    {{--search form--}}
+
+    <div class="input-group pull-right search_field">
+        <input type="text" id="search_content" class="form-control fa-search search_content" placeholder="Search...">
+    </div>
+
+
     {{--list user--}}
     <div class="table-reponsive">
         <table class="table table-hover">
@@ -35,7 +42,7 @@
                     @if(Auth::user()->isadmin == 2)
                     <td>
                         <form action="">
-                            <input type="checkbox" class="checkbox checkflag" name="usercheck" value="check" data-id ="{{$user->id}}"
+                            <input type="checkbox" class="checkbox checkflag" id="check{{$user->id}}" data-id ="{{$user->id}}"
                                    @if( $user->isadmin == 1 )checked
                             @elseif($user->isadmin == 0)
                                     @endif
@@ -123,7 +130,67 @@
 //        end delete
         });
 
+
     </script>
 
+@endsection
+
+@section('script2')
+    <script type="text/javascript">
+
+
+        //search
+        $('.search_field').on('keyup','.search_content', function(e){
+            if (e.keyCode == 27) {
+                $('input.search_content').val("");
+            }
+            var search = $('input.search_content').val();
+            $.ajax({
+                type: 'post',
+                url: '{{asset("")}}admin/user/search',
+                data:{
+                    search: search
+                },
+                success: function (response) {
+                    if (response.html !== ''){
+                        $('tbody').html(response.html);
+                    }
+                    else {
+                        $('tbody').html("<h3>Don't have any content like this</h3>");
+                    }
+
+                }
+            })
+
+        });
+        $(document).on('click','.checkflag', function () {
+            var id = $(this).data('id');
+            if ($('#check'+id).is( ":checked" )){
+                $.ajax({
+                    type: 'put',
+                    url : '{{asset("")}}admin/user/change/' + id,
+                    data:{
+                        isadmin: 1
+                    },
+                    success: function (response) {
+                        toastr.success(response.username + '  became admin');
+                    }
+                })
+            }
+            else {
+                $.ajax({
+                    type: 'put',
+                    url : '{{asset("")}}admin/user/change/' + id,
+                    data:{
+                        isadmin: 0
+                    },
+                    success: function (response) {
+                        toastr.success(response.username + "  is'nt admin anymore");
+                    }
+                })
+            }
+        });
+
+    </script>
 @endsection
 

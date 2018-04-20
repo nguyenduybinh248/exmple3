@@ -134,7 +134,7 @@ class PostController extends Controller
     {
 	    //
 	    $post = Post::find($id);
-	    if ($post->user_id === Auth::user()->id or Auth::user()->isadmin === 1 or Auth::user()->isadmin === 2) {
+	    if ($post->user->id === Auth::user()->id) {
 		    $tags = $post->tags;
 		    $category_id = $post->category->id;
 		    return response()->json([
@@ -156,7 +156,7 @@ class PostController extends Controller
     {
 	    //
 	    $post = Post::find($id);
-	    if ($post->user_id === Auth::user()->id or Auth::user()->isadmin === 1 or Auth::user()->isadmin === 2) {
+	    if ($post->user->id === Auth::user()->id) {
 		    $title = $request->title;
 		    $slug = str_slug($title);
 		    $description = $request->description;
@@ -218,7 +218,7 @@ class PostController extends Controller
     {
         //
 	    $post = Post::find($id);
-	    if ($post->user_id === Auth::user()->id or Auth::user()->isadmin === 1 or Auth::user()->isadmin === 2){
+	    if ($post->user->id === Auth::user()->id or Auth::user()->isadmin === 1 or Auth::user()->isadmin === 2){
 		    $despost = Post::where('id', $id)->delete();
 	    }
 
@@ -324,6 +324,70 @@ class PostController extends Controller
 		}
 
 
+	}
+
+	public function search(Request $request){
+		$search = $request->search;
+		$match = Post::search($search)->get()->pluck('id');
+		$match2 = Post::whereIn('id', $match)->orWhereHas('user', function ($query) use($search){
+			$query->where('username', 'like', '%'.$search.'%');
+		})->orWhereHas('category', function ($q) use($search){
+			$q->where('name', 'like', '%'.$search.'%');
+		})->get()->pluck('id');
+		$posts = Post::whereIn('id', $match2)->get();
+		$view = View::make('admin.searchpost')->with('posts', $posts);
+		$html = $view->render();
+		return response()->json([
+			'html' => $html
+		]);
+	}
+
+	public function searchposted(Request $request){
+		$search = $request->search;
+		$match = Post::search($search)->get()->pluck('id');
+		$match2 = Post::whereIn('id', $match)->orWhereHas('user', function ($query) use($search){
+			$query->where('username', 'like', '%'.$search.'%');
+		})->orWhereHas('category', function ($q) use($search){
+			$q->where('name', 'like', '%'.$search.'%');
+		})->get()->pluck('id');
+		$posts = Post::whereIn('id', $match2)->where('flag', 1)->get();
+		$view = View::make('admin.searchpost')->with('posts', $posts);
+		$html = $view->render();
+		return response()->json([
+			'html' => $html
+		]);
+	}
+
+	public function searchunpost(Request $request){
+		$search = $request->search;
+		$match = Post::search($search)->get()->pluck('id');
+		$match2 = Post::whereIn('id', $match)->orWhereHas('user', function ($query) use($search){
+			$query->where('username', 'like', '%'.$search.'%');
+		})->orWhereHas('category', function ($q) use($search){
+			$q->where('name', 'like', '%'.$search.'%');
+		})->get()->pluck('id');
+		$posts = Post::whereIn('id', $match2)->where('flag', 2)->get();
+		$view = View::make('admin.searchpost')->with('posts', $posts);
+		$html = $view->render();
+		return response()->json([
+			'html' => $html
+		]);
+	}
+
+	public function searchwait(Request $request){
+		$search = $request->search;
+		$match = Post::search($search)->get()->pluck('id');
+		$match2 = Post::whereIn('id', $match)->orWhereHas('user', function ($query) use($search){
+			$query->where('username', 'like', '%'.$search.'%');
+		})->orWhereHas('category', function ($q) use($search){
+			$q->where('name', 'like', '%'.$search.'%');
+		})->get()->pluck('id');
+		$posts = Post::whereIn('id', $match2)->where('flag', 0)->get();
+		$view = View::make('admin.searchpost')->with('posts', $posts);
+		$html = $view->render();
+		return response()->json([
+			'html' => $html
+		]);
 	}
 
 }

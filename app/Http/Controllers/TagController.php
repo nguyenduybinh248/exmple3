@@ -8,6 +8,7 @@ use App\PostTag;
 use App\Tag;
 use Illuminate\Http\Request;
 use App\Http\Requests\TagRequest;
+use Illuminate\Support\Facades\View;
 
 class TagController extends Controller
 {
@@ -105,4 +106,15 @@ class TagController extends Controller
         //
 	    $destag = Tag::where('id', $id)->delete();
     }
+
+
+	public function search(Request $request){
+		$search = $request->search;
+		$tags = Tag::search($search)->get();
+		$view = View::make('admin.searchtag')->with('tags', $tags);
+		$html = $view->render();
+		return response()->json([
+			'html' => $html
+		]);
+	}
 }
